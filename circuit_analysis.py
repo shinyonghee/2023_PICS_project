@@ -30,7 +30,7 @@ import random
 
 do_print = False
 do_plot= False
-output_cap = 1e-6@u_pF
+output_cap = 1e-7@u_pF
 w0=200e-9
 def draw_bode(analysis, UBW):
     figure, axes = plt.subplots(2, figsize=(20, 10))
