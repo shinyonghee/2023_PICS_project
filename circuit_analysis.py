@@ -29,7 +29,7 @@ from PySpice.Unit import *
 import random
 
 do_print = False
-do_plot= True
+do_plot= False
 output_cap = 1@u_pF
 w0=200e-9
 def draw_bode(analysis, UBW):
