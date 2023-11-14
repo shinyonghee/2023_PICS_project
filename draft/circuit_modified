@@ -30,7 +30,7 @@ import random
 
 do_print = False
 do_plot= True
-output_cap = 1@u_pF
+output_cap = 1e-7@u_pF
 w0=200e-9
 def draw_bode(analysis, UBW):
     figure, axes = plt.subplots(2, figsize=(20, 10))
@@ -134,15 +134,14 @@ def get_ts(w1=200E-9,w2=200E-9,w3=200E-9):
     myL=0.13E-6 #fixed
     # CIRCUIT NETLIST
     # ------------------------
-    global w0
     circuit = Circuit('Common-Source MOSFET Amplifier')
 
     # Define amplitude and frequency of input sinusoid
     amp=0.01@u_mV
     freq=1@u_kHz
     # Define transient simulation step time and stop time
-    steptime=0.1@u_ns
-    finaltime = 500@u_ns
+    steptime=1@u_ps
+    finaltime = 0.1@u_us
     voltage_provide=1.3@u_V
     # Define MOSFET models
     # https://ltwiki.org/LTspiceHelp/LTspiceHelp/M_MOSFET.htm
@@ -162,9 +161,8 @@ def get_ts(w1=200E-9,w2=200E-9,w3=200E-9):
 
     # M <name> <drain node> <gate node> <source node> <bulk/substrate node>
     #source = circuit.SinusoidalVoltageSource(3, 'input', 'V2') #amplitude=0.1@u_mV)
-    # circuit.PulseVoltageSource(3, 'input', 'V2', initial_value=-0.1, pulsed_value=0.1, pulse_width=1e-2, period=1e-2, rise_time= 1@u_ps, delay_time=0)
-    circuit.V(3, 'input', 'V2' ,'pulse(-0.1 0.1 0 1p 1p 1e-2)') # PULSE ( V1 V2 TDelay TRising TFalling Width PERiod PHASE )  
-    
+    circuit.PulseVoltageSource(3, 'input', 'V2', initial_value=-0.1, pulsed_value=0.1, pulse_width=1e-2, period=1e-2, rise_time= 1@u_ps, delay_time=0)
+    circuit.V(3, 'input', 'V2', 'pulse(0 0.01 0 0 1e-20 0 1e-2)')  # pulse(input, low, high, delay, rise_time, fall_time, width)
     circuit.V('power','VP',circuit.gnd, voltage_provide)
     circuit.R(1, 'VP', 'M1D', 10@u_kOhm)
     circuit.MOSFET(1, 'M1D', 'M1D', circuit.gnd, circuit.gnd, model='N0')
@@ -205,6 +203,48 @@ def get_ts(w1=200E-9,w2=200E-9,w3=200E-9):
     return float(t_s)
 
 
+
+def FOM5(PM, UBW, power,ts=0):
+    result1 = -10*math.log(power*1e4, 10)
+    result2 =  math.log(UBW*1e-6, 10)
+    # result3= 2*math.log(ts*1e8, 10)
+    # print(result1,result2,result3)
+    result=result1+result2
+    if(PM>60): result=result
+    else: result = result-50
+    return result
+
+def FOM1(PM, UBW, power,ts=0):
+    result1 = -10*math.log(power*1e1, 10)
+    result2 =  10*math.log(UBW*1e-6, 10)
+    # result3= -5*math.log(ts*1e7, 10)
+    print(result1,result2)
+    result=result1+result2
+    if(PM>60): result=result+50
+    else: result = result-50
+    return result
+
+def FOM_presented(PM, UBW, power, ts):
+    result1 = -30*math.log(power*1e3, 10)
+    result2 =  10*math.log(UBW*1e-6, 10)
+    result=result1+result2
+    if(PM>60): result=result+50
+    else: result = result-50
+    return result
+
+
+def FOM_(PM, UBW, power, ts):
+    result1 =  100*math.log(UBW/218596568.9, 10)/0.75
+    result2 = -100*math.log(power/0.000833898, 10)/0.55
+    result3= -100*math.log(ts/1.13201E-08, 10)/0.88
+    result=result1+result2+result3
+    # 
+
+    if(PM>60): result=result+100
+    else: result = result-100
+    # print(result)
+    return result
+
 def FOM(PM, UBW, power, ts, DC_gain):
     result1 =  100*math.log(10*UBW/218596568.9, 10)#/163243273.8
     result2 = -300*math.log(10*power/0.000833898, 10)#/0.000455899
@@ -226,7 +266,8 @@ if __name__=='__main__':
     # for i in range(100):
     #     w1=i*1e-9
     #     simulate(random.uniform(200e-9, 3000e-9), random.uniform(200e-9, 3000e-9), random.uniform(200e-9, 3000e-9))
-    print(get_ts( 8000e-9, 2e-07, 4.560121343600643e-06))
+    # print(simulate( 4.606278935596872e-06, 2e-07, 4.560121343600643e-06))
+    print(get_ts())
 
 
 
